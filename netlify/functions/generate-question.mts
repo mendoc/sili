@@ -4,20 +4,27 @@ import TelegramBot from "node-telegram-bot-api";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY as string);
 const MODEL_NAME = "gemini-pro";
-const THEME: string = "Technologie et programmation";
+const DEFAULT_THEME: string = "Culture générale";
+const DEFAULT_TEMP: string = "0.8";
 const PROMPT: string = "Génère une question de QCM aléatoire avec trois propositions de réponses sur plusieurs thématiques diverses et variées. Indique quelle est la bonne réponse parmi les trois (0, 1 ou 2) et fournis une explication. Formate le tout en JSON selon la structure suivante : {question, options, response, explanation}. La question ne doit pas dépasser 250 caractères. L'explication ne doit pas dépasser 180 caractères.";
 
 export default async (req: Request, context: Context) => {
+
+    const params: URLSearchParams = new URL(req.url).searchParams;
+
     const model = genAI.getGenerativeModel({ model: MODEL_NAME });
 
-    const siliTheme: string = process.env.SILI_THEME || THEME;
-    const geminiTemperature: unknown = process.env.GEMINI_TEMP || 0.8;
+    const siliTheme: string = params.get("theme") || process.env.SILI_THEME as string || DEFAULT_THEME;
+    const geminiTemperature: unknown = params.get("temp") || process.env.GEMINI_TEMP as string || DEFAULT_TEMP;
     const geminiTopK: unknown = process.env.GEMINI_TOP_K || 0;
     const geminiTopP: unknown = process.env.GEMINI_TOP_P || 0.95;
     const geminiMaxOutputTokens: unknown = process.env.GEMINI_MAX_OUTPUT_TOKENS || 8192;
     let geminiPrompt: string = process.env.GEMINI_PROMPT || PROMPT;
 
     geminiPrompt = geminiPrompt.replace("{{THEME}}", siliTheme);
+
+    console.log("theme:", siliTheme);
+    console.log("temp:", geminiTemperature);
 
     const generationConfig = {
         temperature: geminiTemperature as number,
