@@ -1,0 +1,32 @@
+{
+  "name": "sili",
+  "version": "1.0.0",
+  "description": "Un quiz alimenté par IA pour s'entrainer sur divers sujets",
+  "main": "index.js",
+  "scripts": {
+    "start": "NODE_OPTIONS='--openssl-legacy-provider' netlify dev",
+    "build": "NODE_OPTIONS='--openssl-legacy-provider' netlify build"
+  },
+  "keywords": [
+    "node",
+    "gemini",
+    "llm",
+    "telegram",
+    "typescript"
+  ],
+  "author": "Dimitri ONGOUA",
+  "license": "MIT",
+  "dependencies": {
+    "@google/generative-ai": "^0.11.0",
+    "@netlify/functions": "^2.6.3",
+    "node-telegram-bot-api": "^0.65.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.11",
+    "@types/node-telegram-bot-api": "^0.64.6",
+    "typescript": "^5.4.5"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
