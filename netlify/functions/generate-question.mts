@@ -4,16 +4,26 @@ import TelegramBot from "node-telegram-bot-api";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY as string);
 const MODEL_NAME = "gemini-pro";
-const THEME = "Technologie et programmation";
+const THEME: string = "Technologie et programmation";
+const PROMPT: string = "Génère une question de QCM aléatoire avec trois propositions de réponses sur plusieurs thématiques diverses et variées. Indique quelle est la bonne réponse parmi les trois (0, 1 ou 2) et fournis une explication. Formate le tout en JSON selon la structure suivante : {question, options, response, explanation}. La question ne doit pas dépasser 250 caractères. L'explication ne doit pas dépasser 180 caractères.";
 
 export default async (req: Request, context: Context) => {
     const model = genAI.getGenerativeModel({ model: MODEL_NAME });
 
+    const siliTheme: string = process.env.SILI_THEME || THEME;
+    const geminiTemperature: unknown = process.env.GEMINI_TEMP || 0.8;
+    const geminiTopK: unknown = process.env.GEMINI_TOP_K || 0;
+    const geminiTopP: unknown = process.env.GEMINI_TOP_P || 0.95;
+    const geminiMaxOutputTokens: unknown = process.env.GEMINI_MAX_OUTPUT_TOKENS || 8192;
+    let geminiPrompt: string = process.env.GEMINI_PROMPT || PROMPT;
+
+    geminiPrompt = geminiPrompt.replace("{{THEME}}", siliTheme);
+
     const generationConfig = {
-        temperature: 0.8,
-        topK: 0,
-        topP: 0.95,
-        maxOutputTokens: 8192
+        temperature: geminiTemperature as number,
+        topK: geminiTopK as number,
+        topP: geminiTopP as number,
+        maxOutputTokens: geminiMaxOutputTokens as number
     };
 
     const safetySettings = [
@@ -36,7 +46,7 @@ export default async (req: Request, context: Context) => {
     ];
 
     const parts = [
-        { text: `Génère une question de QCM aléatoire avec trois propositions de réponses sur plusieurs thématiques diverses et variées. Indique quelle est la bonne réponse parmi les trois (0, 1 ou 2) et fournis une explication. Formate le tout en JSON selon la structure suivante : {question, options, response, explanation}. La question ne doit pas dépasser 250 caractères. L'explication ne doit pas dépasser 180 caractères.` },
+        { text: geminiPrompt },
     ];
 
     const result = await model.generateContent({
@@ -53,9 +63,9 @@ export default async (req: Request, context: Context) => {
     const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN as string);
     await bot.sendPoll(
         process.env.TELEGRAM_CHAT_ID as string,
-        responseObj.question,
+        responseObj.question.substring(0, 300),
         responseObj.options,
-        { type: "quiz", correct_option_id: responseObj.response, explanation: responseObj.explanation }
+        { type: "quiz", correct_option_id: responseObj.response, explanation: responseObj.explanation.substring(0, 200) }
     );
 
     return Response.json(responseObj);
